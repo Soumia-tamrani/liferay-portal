@@ -1,0 +1,100 @@
+@component-name = "portal-web-forms-and-data-lists"
+definition {
+
+	property testray.main.component.name = "Forms";
+
+	setUp {
+		task ("Set up Portal Instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Perform First Login") {
+			User.firstLoginPG();
+		}
+
+		task ("Open URL") {
+			Navigator.openURL();
+		}
+	}
+
+	tearDown {
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+	}
+
+	@description = "Verify that a Form can be created"
+	@priority = 5
+	test PerformFormCreationTranslationAndDualPublication {
+		task ("Given that a form is created") {
+			FormsAdmin.addForm();
+
+			Form.editName(formName = "United States");
+
+			Form.editDescription(formDescription = "English Form.");
+
+			Form.editPageTitle(
+				formPageName = "English",
+				formTitleNumber = 1);
+
+			Form.gotoAddField(
+				fieldPositionNumber = 0,
+				fieldType = "Text");
+
+			FormFields.editText(
+				fieldName = "Label",
+				fieldValue = "Full Name");
+
+			Form.save();
+
+			Form.gotoAddField(
+				fieldPositionNumber = 1,
+				fieldType = "Numeric");
+
+			FormFields.editText(
+				fieldName = "Label",
+				fieldValue = "Age");
+
+			Form.save();
+		}
+
+		task ("When the user translates the form into French") {
+			Form.addTranslation(localizedLanguage = "French (France)");
+
+			Form.editName(formName = "France");
+
+			Form.editDescription(formDescription = "Formulaire en Francais.");
+
+			Form.editPageTitle(
+				formPageName = "Francais",
+				formTitleNumber = 1);
+
+			Click(
+				key_fieldName = "Full Name",
+				locator1 = "FormFields#TEXT_FIELD");
+
+			FormFields.editText(
+				fieldName = "Label",
+				fieldValue = "Nom et prénom");
+
+			Click(
+				key_fieldName = "Age",
+				locator1 = "FormFields#TEXT_FIELD");
+
+			FormFields.editText(
+				fieldName = "Label",
+				fieldValue = "âge");
+
+			Form.save();
+		}
+
+		task ("Then assert that two forms are published simultaneously in both English and French") {
+			FormsAdminNavigator.gotoPreviewForm();
+
+			Navigator.selectSpecificWindow(windowTitle = "Form - Forms");
+
+			FormPortletConfiguration.viewTranslationLanguage(language = "français-France");
+		}
+	}
+
+}

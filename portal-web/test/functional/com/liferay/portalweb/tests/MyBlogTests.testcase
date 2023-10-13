@@ -1,0 +1,127 @@
+@component-name = "portal-lima"
+definition {
+
+	property testray.main.component.name = "Blogs";
+
+	setUp {
+		task ("Set up Portal Instance") {
+			TestCase.setUpPortalInstance();
+		}
+
+		task ("Perform First Login") {
+			User.firstLoginPG();
+		}
+
+		task ("Open URL") {
+			Navigator.openURL();
+		}
+
+		task ("Given the Blogs Portlet is added to the page") {
+			JSONBlog.addEntry(
+				entryContent = "Blog1",
+				entryTitle = "Blog1");
+
+			JSONBlog.addEntry(
+				entryContent = "Blog2",
+				entryTitle = "Blog2");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if (${testPortalInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "Create Blog succefully"
+	@priority = 5
+	test CanCreateAndDisplayBlogSuccessfully {
+		task ("When the user adds a Blog Entry") {
+			Blogs.addEntry(
+				entryContent = "blog test",
+				entryTitle = "blog test");
+		}
+
+		task ("Then the Blog Entry should display on the page") {
+			AssertElementPresent(
+				key_entryTitle = "blog test",
+				key_tagName = "blog test",
+				locator1 = "BlogsEntry#TAG");
+		}
+	}
+
+	@description = "Delete Blog succefully"
+	@priority = 5
+	test CanDeleteSuccessfullyMyFirstBlogEntryAndSecondEntryExists {
+		task ("When User deletes Blog Entry 1") {
+			LexiconEntry.gotoEntryMenuItemNoError(
+				menuItem = "Delete",
+				rowEntry = "Blog1");
+		}
+
+		task ("Then Blog Entry 1 should not exist") {
+			AssertElementNotPresent(
+				key_entryTitle = "Blog1",
+				key_tagName = "Blog1",
+				locator1 = "BlogsEntry#TAG");
+		}
+
+		task ("And Blog entry 2 should exist") {
+			AssertElementPresent(
+				key_entryTitle = "Blog2",
+				key_tagName = "Blog2",
+				locator1 = "BlogsEntry#TAG");
+		}
+	}
+
+	@description = " Can Edit a Blog successfully"
+	@priority = 5
+	test CanEditExistingBlogEntryAndVerifyChangesPersistSuccessfully {
+		task ("When the user edits blog entry") {
+			LexiconEntry.gotoEntry(rowEntry = "Blog1");
+
+			BlogsEntry.editEntryContent(
+				entryContent = "Blog1",
+				entryContentEdit = "1st Blog edit",
+				entryTitle = "Blog1",
+				entryTitleEdit = "Blog1 Edit");
+
+			PortletEntry.publish();
+		}
+
+		task ("Then: the Blog Entry should be edited") {
+			AssertElementPresent(
+				key_entryTitle = "Blog1",
+				key_tagName = "Blog1",
+				locator1 = "BlogsEntry#TAG");
+		}
+	}
+
+	@description = " Can Search Blogs successfully"
+	@priority = 5
+	test CanSearchForSpecificBlogEntriesAndVerifyResultsWithSuccessfull {
+		task ("When the user searches for Blog Entry 1") {
+			BlogsEntry.searchCP(
+				entryContent = "Blog1",
+				entrySearchTerm = "Blog1",
+				entryTitle = "Blog1");
+		}
+
+		task ("Then Blog Entry 1 should display") {
+			AssertVisible(
+				key_card = "Blog1",
+				locator1 = "Card#CARD");
+		}
+
+		task ("And Blog Entry 2 should not display") {
+			AssertElementNotPresent(
+				key_listEntry = "Blog2",
+				locator1 = "LexiconList#LIST_ENTRY");
+		}
+	}
+
+}
